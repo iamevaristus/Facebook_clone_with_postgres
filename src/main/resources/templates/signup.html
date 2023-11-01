@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+    <head>
+        <title>Facebook - Create your account</title>
+        <link rel="stylesheet" th:href="@{/css/signup.css}"/>
+        <link rel="stylesheet" th:href="@{/css/global.css}"/>
+        <link rel="icon" th:href="@{/images/facebook.ico}" type="image/x-icon"/>
+        <meta name="description" content="Signup with username, email and a password.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#006AFF">
+    </head>
+    <body>
+        <div class="box">
+            <div class="title-box">
+                <img src="https://i.postimg.cc/NMyj90t9/logo.png" alt="Facebook">
+                <p>Facebook helps you connect and share with the people in your life.</p>
+            </div>
+            <div class="form-box">
+                <h3 style="
+                      text-align: left; color: #166fe5;
+                    ">Signup today</h3>
+                <p style="
+                      color: #5a5959; font-size: 12px; text-align: left;
+                    ">Choose a unique username and start connecting</p>
+                <form id="signup-form" th:action="@{/verify/signup}" method="post" th:object="${signup}">
+                    <div style="
+                                    background-color: lightyellow;
+                                    padding: 10px;
+                                    border-radius: 15px;
+                                    margin-bottom: 30px;
+                                " th:if="${signupError} != null">
+                        <p style="
+                                        color: indianred;
+                                        text-align: left;
+                                        font-size: 14px;
+                                        margin-block-start: 0;
+                                        margin-block-end: 0;
+                                    " th:text="${signupError}"></p>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between">
+                        <label title="First Name" style="padding-right: 10px">
+                            <input type="text" placeholder="First name" required th:field="*{firstName}">
+                        </label>
+                        <label>
+                            <input type="text" placeholder="Last name" required th:field="*{lastName}">
+                        </label>
+                    </div>
+                    <label>
+                        <input type="email" placeholder="Email Address" required th:field="*{emailAddress}">
+                    </label>
+                    <label>
+                        <input type="text" placeholder="Username" required th:field="*{username}">
+                    </label>
+                    <div style="display: flex; align-items: center; justify-content: start" class="select">
+                        <label style="text-align: start; color: #414141;" for="selectGender">Gender</label>
+                        <select class="custom-select col-sm-6" id="selectGender" style="
+                            width: 100%; flex: 1; margin-left: 10px;
+                            border: none;
+                        " th:field="*{gender}">
+                            <option value="female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="non-binary">Non-Binary</option>
+                            <option value="other">Other</option>
+                            <option value="Prefer not to say">Prefer not to Say</option>
+                        </select>
+                    </div>
+                    <label>
+                        <input type="password" placeholder="New Password" required th:field="*{password}">
+                    </label>
+                    <p class="click_to_agree">By clicking create account, you agree to our terms, data policy and cookies policy.
+                    </p>
+                    <button type="submit" value="Sign Up">Create account</button>
+                </form>
+                <hr>
+                <div class="create-btn">
+                    <a th:href="@{/auth/login}" rel="noopener">Already have an account? Click here</a>
+                </div>
+            </div>
+
+            <div id="loading-popup">
+                <div id="loading-content">
+                    <iframe src="https://lottie.host/?file=5101693a-277c-4e40-89f7-13e58c446517/efgLTY4uvf.lottie"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" th:src="@{../static/js/loading.js}"></script>
+    </body>
+</html>

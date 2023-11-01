@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+    <head>
+        <meta charset="UTF-8" http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Facebook - Home</title>
+        <link rel="stylesheet" th:href="@{/css/home.css}"/>
+        <link rel="stylesheet" th:href="@{/css/create_post.css}"/>
+        <link rel="stylesheet" th:href="@{/css/home.css}"/>
+        <link rel="stylesheet" th:href="@{/css/global.css}"/>
+        <link rel="stylesheet" th:href="@{/css/main_left.css}"/>
+        <link rel="stylesheet" th:href="@{/css/main_right.css}"/>
+        <link rel="stylesheet"
+              th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css}"
+              integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A=="
+              crossorigin="anonymous" referrerpolicy="no-referrer"
+        />
+        <link rel="icon" th:href="@{/images/facebook.ico}" type="image/x-icon"/>
+    </head>
+    <body th:if="${currentUser} != null">
+        <nav>
+            <div class="left">
+                <div class="logo">
+                    <a th:href="@{/}">
+                        <img src="https://i.postimg.cc/NMyj90t9/logo.png" alt="Facebook">
+                    </a>
+                </div>
+                <div class="search_bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <label>
+                        <input type="search" placeholder="Search Facebook">
+                    </label>
+                </div>
+            </div>
+
+            <div class="right">
+                <i class="fa-solid fa-list-ul"></i>
+                <i class="fa-brands fa-facebook-messenger"></i>
+                <i class="fa-solid fa-bell"></i>
+                <i class="fa-solid fa-moon"></i>
+                <form th:action="@{/show/profile}" method="post" th:object="${currentUser}">
+                    <input th:value="${currentUser.userId}" th:name="userId" type="hidden" />
+                    <button class="profile-header" type="submit" style="
+                            box-shadow: none;
+                            font-size: 12px;
+                            border: none;
+                            color: white;
+                            background-color: #166fe5;
+                            padding: 10px;
+                            height: 40px;
+                            width: 40px;
+                            border-radius: 50%;
+                            margin-left: 10px;"
+                            th:text="${currentUser.nameAbbrev}"
+                    ></button>
+                </form>
+            </div>
+        </nav>
+        <!------------main--------------->
+        <div class="main">
+            <!------------major---------------------->
+            <div class="left">
+                <div class="my_post">
+                    <div class="post_top">
+                        <div style="background-color: #eeebeb; border-radius: 10px; padding: 7px 12px">
+                            <h2>👤</h2>
+                        </div>
+                        <div class="input-container" id="open_create_post">
+                            <p style="color: #cccccc" th:text="${inputText}"></p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="post_bottom">
+                        <div class="post_icon red">
+                            <i class="fa-solid fa-video" style="color: #ff2600; margin-right: 8px; font-size: 23px;"></i>
+                            <p>Live Video</p>
+                        </div>
+                        <div class="post_icon">
+                            <i class="fa-solid fa-images green"></i>
+                            <p>Photo/video</p>
+                        </div>
+                        <div class="post_icon">
+                            <i class="fa-regular fa-face-grin yellow"></i>
+                            <p>Feeling/activity</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 225px 50px" th:if="${posts.size() == 0 || posts.isEmpty()}">
+                    <h2 style="font-size: 80px; text-align: center">🫠</h2>
+                    <p style="text-align: center">No posts yet, be the first!</p>
+                </div>
+                <div th:if="${!posts.isEmpty()}" th:each=" post: ${posts} ">
+                    <div class="friends_post">
+                        <div class="friend_post_top">
+                            <div class="img_and_name">
+                                <div style="
+                                    background-color: #eeebeb;
+                                    display: flex;
+                                    justify-content: center; /* Horizontal centering */
+                                    align-items: center; /* Vertical centering */
+                                    width: 50px;
+                                    height: 50px;
+                                    border-radius: 50%;
+                                    margin-right: 10px;
+                                ">
+                                    <h4 style="font-size: 30px; text-align: center; margin: 0;" th:text="${post.postedByAvatar}"></h4>
+                                </div>
+                                <div class="friends_name">
+                                    <form th:action="@{/show/profile}" method="post">
+                                        <input th:value="${post.user.userId}" th:name="userId" type="hidden" />
+                                        <button class="friends_name" type="submit" style="background-color: transparent;
+                                          box-shadow: none;
+                                          font-size: 16px;
+                                          border: none;" th:text="${post.postedBy()}"></button>
+                                    </form>
+                                    <p class="time" th:text="${post.postTime()}"><i class="fa-solid fa-user-group"></i></p>
+                                </div>
+                            </div>
+                            <div class="menu">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </div>
+                        </div>
+                        <p style="font-size: 18px" th:text="${post.post}"></p>
+                        <div class="info">
+                            <div class="emoji_img">
+                                <i class="fa-solid fa-thumbs-up" style="color: #0061ff;"></i>
+                                <p style="margin-left: 10px;" th:text="${post.likeString(currentUser)}"></p>
+                            </div>
+                            <%-- Comments Section --%>
+                            <p style="
+                                padding: 0 12px;
+                                font-size: 15px;
+                                color: #919191;" th:text="${post.commentString(currentUser)}"></p>
+                        </div>
+                        <hr>
+                        <div class="like">
+                            <form th:action="@{/post/like}" method="post">
+                                <input th:value="${post.postId}" th:name="postId" type="hidden" />
+                                <input type="hidden" th:value="${post.isLikedByCurrentUser(currentUser)}" th:name="isLiked">
+                                <button type="submit" class="like_icon like-button" th:if="${post.isLikedByCurrentUser(currentUser)}">
+                                    <i class="fa-solid fa-thumbs-up"></i>
+                                    Like
+                                </button>
+                                <button type="submit" class="like_icon" th:if="${!post.isLikedByCurrentUser(currentUser)}">
+                                    <i class="fa-solid fa-thumbs-up"></i>
+                                    Like
+                                </button>
+                            </form>
+                            <div class="like_icon">
+                                <i class="fa-solid fa-message"></i>
+                                <p>Comments</p>
+                            </div>
+                            <div class="like_icon">
+                                <i class="fa-solid fa-share"></i>
+                                <p>Share</p>
+                            </div>
+                            <div th:if="${post.isPostedByCurrentUser(currentUser)}">
+                                <div class="like_icon edit-button open_edit_post" data-post-content="${post.post} *****PostID${post.postId}">
+                                    <i class="fa-solid fa-marker"></i>
+                                    <p>Edit Post</p>
+                                </div>
+                                <form th:action="@{/post/edit}" method="post">
+                                    <input type="hidden" th:value="${post.postId}">
+                                    <button type="submit" class="like_icon delete-button">
+                                        <i class="fa-solid fa-trash"></i>
+                                        Delete Post
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="comment_wrapper">
+                            <div th:if="${!post.comments().isEmpty()}" th:each="comment : ${post.comments()}">
+                                <div class="comment-row" style="    margin: 14px 0; display: flex; align-items: start; justify-content: flex-start">
+                                    <div style="
+                                          background-color: #eeebeb;
+                                          display: flex;
+                                          justify-content: center; /* Horizontal centering */
+                                          align-items: center; /* Vertical centering */
+                                          width: 45px;
+                                          height: 45px;
+                                          border-radius: 50%;
+                                          margin-right: 20px;
+                                    ">
+                                        <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${comment.commentedByAvatar()}"></h4>
+                                    </div>
+                                    <div class="comment-column" style=" width: 100%">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <form th:action="@{/show/profile}" method="post">
+                                                <input type="hidden" th:value="${comment.userId()}">
+                                                <button class="friends_name" type="submit" style="background-color: transparent;
+                                                  box-shadow: none;
+                                                  font-size: 16px;
+                                                  border: none;" th:text="${comment.commentedBy()}"></button>
+                                            </form>
+                                            <p style="font-size: 14px; text-align: center; margin: 0; color: #9a9a9a" th:text="${comment.likeString()}"></p>
+                                        </div>
+                                        <div class="comment-buttons" style="display: flex; justify-content: space-between; width: 100%; align-items: center">
+                                            <p style="font-size: 16px; color: #555555" th:text="${comment.comment()}"></p>
+                                            <div style="display: flex; align-items: center">
+                                                <form th:action="@{/comment/like}" method="post">
+                                                    <input th:value="*{comment.commentId()}" type="hidden" />
+                                                    <input th:value="*{comment.postId()}" type="hidden" />
+                                                    <input type="hidden" th:value="*{comment.isLikedByCurrentUser(currentUser)}">
+                                                    <button type="submit" class="like_icon like-button" th:if="${comment.isLikedByCurrentUser(currentUser)}">
+                                                        <i class="fa-solid fa-thumbs-up"></i>
+                                                    </button>
+                                                    <button type="submit" class="like_icon" th:if="${!comment.isLikedByCurrentUser(currentUser)}">
+                                                        <i class="fa-solid fa-thumbs-up"></i>
+                                                    </button>
+                                                </form>
+                                                <div th:if="${comment.isCommentedByCurrentUser(currentUser)}">
+                                                    <div class="like_icon edit-button open_edit_comment" data-comment-content="${comment.comment} *****CommentID${comment.commentId}">
+                                                        <i class="fa-solid fa-marker"></i>
+                                                        <p>Edit Comment</p>
+                                                    </div>
+                                                    <form th:action="@{/comment/edit}" method="post">
+                                                        <input type="hidden" th:value="*{comment.postId()}">
+                                                        <input type="hidden" th:value="*{comment.commentId()}">
+                                                        <button type="submit" class="like_icon delete-button">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                            Delete Comment
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <form th:action="@{/comment/create}" method="post" style="display: flex; flex: 1">
+                                <div style="
+                                  background-color: #eeebeb;
+                                  display: flex;
+                                  justify-content: center; /* Horizontal centering */
+                                  align-items: center; /* Vertical centering */
+                                  width: 45px;
+                                  height: 45px;
+                                  border-radius: 50%;
+                                  margin-right: 20px;
+                                ">
+                                    <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${currentUser.avatar()}"></h4>
+                                </div>
+                                <div class="comment_search">
+                                    <label>
+                                        <input type="hidden" th:value="${post.postId()}">
+                                        <input type="text" placeholder="Write a comment" th:field="${commentContent}">
+                                    </label>
+                                </div>
+                                <button type="submit" class="comment_icon send-post">
+                                    <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i>
+                                    Comment
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!------------------right------------------>
+            <div class="right" th:object="${viewProfile}">
+                <div style="
+                    background-color: #134892;
+                    display: flex;
+                    justify-content: center; /* Horizontal centering */
+                    align-items: center; /* Vertical centering */
+                    width: 130px;
+                    height: 130px;
+                    border-radius: 50%;
+                    margin: 15px 40%;
+                ">
+                    <h4 style="font-size: 100px; text-align: center; margin: 0;" th:text="${viewProfile.avatar()}"></h4>
+                </div>
+                <h2 style="
+                    font-size: 16px;
+                    color: #919191;
+                    text-align: center;
+                " th:text="${viewProfile.fullName()}"></h2>
+                <h2 style="
+                    font-size: 13px;
+                    color: #919191;
+                    text-align: center;
+                " th:text="${viewProfile.totalPostsMade()}"></h2>
+                <h2 style="
+                    font-size: 13px;
+                    color: #919191;
+                    text-align: center;
+                " th:text="${viewProfile.joinedMoment()}"></h2>
+                <hr>
+                <div class="second_wrapper">
+                    <div class="contact_tag">
+                        <h2 th:text="${viewProfile.postsIntro()}"></h2>
+                        <div class="contact_icon">
+                            <i class="fa-solid fa-video"></i>
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </div>
+                    </div>
+                    <div style="padding: 225px 50px" th:if="${viewProfile.posts().size() == 0 || viewProfile.posts().isEmpty()}">
+                        <h2 style="font-size: 50px; text-align: center">🫣</h2>
+                        <p style="text-align: center" th:text="${viewProfile.noPosts()}"></p>
+                    </div>
+                    <div th:if="${!viewProfile.posts().isEmpty()}" th:each=" post : ${viewProfile.posts()} ">
+                        <div style="border: 6px solid lavender; border-radius: 15px; padding: 10px; margin-bottom: 10px">
+                            <div style="display: flex; justify-content: space-between; align-items: center">
+                                <div style="display: flex; align-items: center">
+                                    <div style="
+                                        background-color: #eeebeb;
+                                        display: flex;
+                                        justify-content: center; /* Horizontal centering */
+                                        align-items: center; /* Vertical centering */
+                                        width: 50px;
+                                        height: 50px;
+                                        border-radius: 50%;
+                                        margin-right: 10px;
+                                    ">
+                                        <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${post.postedByAvatar()}"></h4>
+                                    </div>
+                                    <div class="friends_name">
+                                        <form th:action="@{/show/profile}" method="post">
+                                            <input th:field="*{post.user().getUserId()}" type="hidden" />
+                                            <button class="friends_name" type="submit" style="background-color: transparent;
+                                              box-shadow: none;
+                                              font-size: 16px;
+                                              border: none;" th:text="${post.postedBy()}"></button>
+                                        </form>
+                                        <p class="time" th:text="${post.postTime()}"><i class="fa-solid fa-user-group"></i></p>
+                                    </div>
+                                </div>
+                                <div class="menu">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </div>
+                            </div>
+                            <p style="font-size: 18px; margin-top: 20px; margin-bottom: 30px" th:text="${post.post}"></p>
+                            <div class="info">
+                                <div class="emoji_img">
+                                    <i class="fa-solid fa-thumbs-up" style="color: #0061ff;"></i>
+                                    <p style="margin-left: 10px;" th:text="${post.likeString(currentUser)}"></p>
+                                </div>
+                                <p style="
+                                    padding: 0 12px;
+                                    font-size: 15px;
+                                    color: #919191;" th:text="${post.commentString(currentUser)}"></p>
+                            </div>
+                            <hr>
+                            <div class="like">
+                                <form th:action="@{/post/like}" method="post">
+                                    <input th:value="${post.postId}" th:name="postId" type="hidden" />
+                                    <input type="hidden" th:value="${post.isLikedByCurrentUser(currentUser)}" th:name="isLiked">
+                                    <button type="submit" class="dis_like_icon like-button" th:if="${post.isLikedByCurrentUser(currentUser)}">
+                                        <i class="fa-solid fa-thumbs-up"></i></button>
+                                    <button type="submit" class="dis_like_icon" th:if="${!post.isLikedByCurrentUser(currentUser)}">
+                                        <i class="fa-solid fa-thumbs-up"></i></button>
+                                </form>
+                                <div class="dis_like_icon"><i class="fa-solid fa-message"></i></div>
+                                <div class="dis_like_icon"><i class="fa-solid fa-share"></i></div>
+                                <div th:if="${post.isPostedByCurrentUser(currentUser)}">
+                                    <div class="dis_like_icon edit-button open_edit_post" data-post-content="${post.post} *****PostID${post.postId}">
+                                        <i class="fa-solid fa-marker"></i></div>
+                                    <form th:action="@{/post/edit}" method="post">
+                                        <input type="hidden" th:value="*{post.postId()}">
+                                        <button type="submit" class="dis_like_icon delete-button"><i class="fa-solid fa-trash"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="comment_wrapper">
+                                <div th:if="${!post.comments().isEmpty()}" th:each="comment : ${post.comments()}">
+                                    <div class="comment-row" style="    margin: 14px 0; display: flex; align-items: start; justify-content: flex-start">
+                                        <div style="
+                                          background-color: #eeebeb;
+                                          display: flex;
+                                          justify-content: center; /* Horizontal centering */
+                                          align-items: center; /* Vertical centering */
+                                          width: 45px;
+                                          height: 45px;
+                                          border-radius: 50%;
+                                          margin-right: 20px;
+                                        ">
+                                            <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${comment.commentedByAvatar()}"></h4>
+                                        </div>
+                                        <div class="comment-column" style=" width: 100%">
+                                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                                <form th:action="@{/show/profile}" method="post">
+                                                    <input type="hidden" th:value="${comment.userId()}">
+                                                    <button class="friends_name" type="submit" style="background-color: transparent;
+                                                      box-shadow: none;
+                                                      font-size: 16px;
+                                                      border: none;" th:text="${comment.commentedBy()}"></button>
+                                                </form>
+                                                <p style="font-size: 14px; text-align: center; margin: 0; color: #9a9a9a" th:text="${comment.likeString()}"></p>
+                                            </div>
+                                            <div class="comment-buttons" style="display: flex; justify-content: space-between; width: 100%; align-items: center">
+                                                <p style="font-size: 16px; color: #555555" th:text="${comment.comment()}"></p>
+                                                <div style="display: flex; align-items: center">
+                                                    <form th:action="@{/comment/like}" method="post" th:object="${editContent}">
+                                                        <input th:field="*{commentId}" th:value="*{comment.commentId}" type="hidden" />
+                                                        <input th:value="*{comment.postId()}" type="hidden" />
+                                                        <input type="hidden" th:value="*{comment.isLikedByCurrentUser(currentUser)}">
+                                                        <button type="submit" class="like_icon like-button" th:if="${comment.isLikedByCurrentUser(currentUser)}">
+                                                            <i class="fa-solid fa-thumbs-up"></i>
+                                                        </button>
+                                                        <button type="submit" class="like_icon" th:if="${!comment.isLikedByCurrentUser(currentUser)}">
+                                                            <i class="fa-solid fa-thumbs-up"></i>
+                                                        </button>
+                                                    </form>
+                                                    <div th:if="${comment.isCommentedByCurrentUser(currentUser)}">
+                                                        <div class="like_icon edit-button open_edit_comment" data-comment-content="${comment.comment} *****CommentID${comment.commentId}">
+                                                            <i class="fa-solid fa-marker"></i>
+                                                            <p>Edit Comment</p>
+                                                        </div>
+                                                        <form th:action="@{/comment/delete}" method="post" th:object="${editContent}">
+                                                            <input type="hidden" th:field="*{commentId}">
+                                                            <input type="hidden" th:field="*{postId}">
+                                                            <button type="submit" class="like_icon delete-button">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                                Delete Comment
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <form th:action="@{/comment/create}" method="post" style="display: flex; flex: 1" th:object="${editContent}">
+                                    <div style="
+                                      background-color: #eeebeb;
+                                      display: flex;
+                                      justify-content: center; /* Horizontal centering */
+                                      align-items: center; /* Vertical centering */
+                                      width: 45px;
+                                      height: 45px;
+                                      border-radius: 50%;
+                                      margin-right: 20px;
+                                    ">
+                                        <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${currentUser.avatar()}"></h4>
+                                    </div>
+                                    <div class="comment_search">
+                                        <label>
+                                            <input type="hidden" th:field="*{postId}">
+                                            <input type="text" placeholder="Write a comment" th:field="*{text}">
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="comment_icon send-post">
+                                        <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i>
+                                        Comment
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="create_post" class="modal">
+            <div class="modal-content">
+                <h3 style="color: #134892;" th:text="${viewProfile.createPost()}"></h3>
+                <form th:action="@{/post/create}" method="post" name="createPostForm" id="createPostForm" th:object="${editContent}">
+                    <label class="input-container">
+                    <textarea
+                            id="createPostInput"
+                            th:field="*{text}"
+                            form="createPostForm"
+                            placeholder="">
+                    </textarea>
+                    </label>
+                    <div class="post-buttons">
+                        <div class="post_icon cancel-post" id="close_create_post">
+                            <i class="fa-solid fa-xmark" style="margin-right: 8px;"></i>
+                            <p>Cancel</p>
+                        </div>
+                        <button type="submit" class="post_icon send-post">
+                            <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i>
+                            Send Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal edit_post">
+            <div class="modal-content">
+                <h3 style="color: #134892;" th:text="${viewProfile.editPost()}"></h3>
+                <form th:action="@{/post/edit}" method="post" name="editPostForm" id="editPostForm" th:object="${editContent}">
+                    <label class="input-container">
+                        <textarea
+                                class="editPostInput"
+                                th:field="*{text}"
+                                form="editPostForm"
+                                placeholder=""></textarea>
+                    </label>
+                    <input type="hidden" th:field="*{postId}" class="editPostInputId">
+                    <div class="post-buttons">
+                        <div class="post_icon cancel-post close_edit_post">
+                            <i class="fa-solid fa-xmark" style="margin-right: 8px;"></i>
+                            <p>Cancel Update</p>
+                        </div>
+                        <button type="submit" class="post_icon send-post">
+                            <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i>
+                            Update Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal edit_comment">
+            <div class="modal-content">
+                <h3 style="color: #134892;" th:text="${viewProfile.editComment()}"></h3>
+                <form th:action="@{/comment/edit}" method="post" name="editCommentForm" id="editCommentForm" th:object="${editContent}">
+                    <label class="input-container">
+                          <textarea
+                              class="editCommentInput"
+                              th:field="*{text}"
+                              form="editCommentForm"
+                              placeholder="">
+                          </textarea>
+                    </label>
+                    <input type="hidden" th:field="*{commentId}" id="editCommentInputId">
+                    <div class="post-buttons">
+                        <div class="post_icon cancel-post close_edit_comment">
+                            <i class="fa-solid fa-xmark" style="margin-right: 8px;"></i>
+                            <p>Cancel Update</p>
+                        </div>
+                        <button type="submit" class="post_icon send-post">
+                            <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i>
+                            Update Comment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript" th:src="@{/js/loading.js}"></script>
+        <script type="text/javascript" th:src="@{/js/post_create.js}"></script>
+        <script type="text/javascript" th:src="@{/js/post_edit.js}"></script>
+    </body>
+    <body th:if="${currentUser} == null">
+        <iframe src="https://lottie.host/?file=5101693a-277c-4e40-89f7-13e58c446517/efgLTY4uvf.lottie"></iframe>
+    </body>
+</html>
