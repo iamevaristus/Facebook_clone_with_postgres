@@ -21,12 +21,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -57,16 +54,21 @@ public class HomeController {
                 PostRecord postRecord = getPostRecord(post, comments);
                 postRecords.add(postRecord);
             }
-            postRecords.sort((a, b) -> b.createdAt().compareTo(a.createdAt()));
-            postRecords.sort((a, b) -> b.updatedAt().compareTo(a.updatedAt()));
+            postRecords.sort((a, b) -> {
+                if(a.updatedAt() != null && b.updatedAt() != null) {
+                    return b.updatedAt().compareTo(a.updatedAt());
+                } else {
+                    return b.createdAt().compareTo(a.createdAt());
+                }
+            });
             model.addAttribute("posts", postRecords);
 
             if(httpSession.getAttribute("view-profile") != null) {
                 UserRecord userRecord = (UserRecord) httpSession.getAttribute("view-profile");
-                model.addAttribute("viewProfile", userRecord);
+                setViewProfile(model, userRecord);
             } else {
                 httpSession.setAttribute("view-profile", currentUser);
-                model.addAttribute("viewProfile", currentUser);
+                setViewProfile(model, currentUser);
             }
 
             model.addAttribute("editContent", new EditRecord("", "", ""));
@@ -74,6 +76,16 @@ public class HomeController {
         } else {
             return "redirect:/auth/login";
         }
+    }
+
+    private void setViewProfile(Model model, UserRecord userRecord) {
+        model.addAttribute("viewProfile", userRecord);
+        List<PostRecord> profilePosts = new ArrayList<>();
+        List<Post> postList = postRepository.getPostsByUserId(userRecord.userId());
+        for(Post post : postList) {
+            profilePosts.add(getPostRecord(post, post.getComments()));
+        }
+        model.addAttribute("viewProfilePosts", profilePosts);
     }
 
     private PostRecord getPostRecord(Post post, List<Comment> comments) {
@@ -95,7 +107,7 @@ public class HomeController {
     @PostMapping(name = "Show Profile", value = "/show/profile")
     public String showSideProfile(HttpSession httpSession, String userId) {
         Optional<User> user = repository.findById(UUID.fromString(userId));
-        user.ifPresent(value -> httpSession.setAttribute("view-profile", value));
+        user.ifPresent(value -> httpSession.setAttribute("view-profile", auth.userRecord(value)));
         return "redirect:/";
     }
 
@@ -111,13 +123,10 @@ public class HomeController {
     }
 
     @PostMapping(name = "Like Post", value = "/post/like")
-    public String likePost(HttpSession httpSession, String postId, String isLiked) {
+    public String likePost(HttpSession httpSession, String postId, String isLiked, String likeId) {
         if(postId != null && isLiked != null) {
-            boolean state = Boolean.getBoolean(isLiked);
-            UserRecord currentUser = (UserRecord) httpSession.getAttribute("currentUser");
-            if(state) {
-                likeRepository.deleteByPostIdAndUserId(currentUser.userId(), UUID.fromString(postId));
-            } else {
+            if(isLiked.equalsIgnoreCase("false")) {
+                UserRecord currentUser = (UserRecord) httpSession.getAttribute("currentUser");
                 repository.findById(currentUser.userId()).ifPresent(user -> {
                     postRepository.findById(UUID.fromString(postId)).ifPresent(post -> {
                         Likes likes = new Likes();
@@ -126,14 +135,24 @@ public class HomeController {
                         likeRepository.save(likes);
                     });
                 });
+            } else {
+                if(Long.parseLong(likeId) != 0L) {
+                    likeRepository.deleteById(Long.parseLong(likeId));
+                }
             }
         }
         return "redirect:/";
     }
 
     @PostMapping(name = "Edit Post", value = "/post/edit")
-    public String editPost(Model model, @RequestBody String userId) {
-        System.out.println(userId);
+    public String editPost(EditRecord edit) {
+        if(edit != null && edit.text() != null && edit.postId() != null) {
+            postRepository.findById(UUID.fromString(edit.postId())).ifPresent(post -> {
+                post.setPost(edit.text());
+                post.setUpdatedAt(LocalDateTime.now());
+                postRepository.save(post);
+            });
+        }
         return "redirect:/";
     }
 
@@ -157,18 +176,13 @@ public class HomeController {
     }
 
     @PostMapping(name = "Like Comment", value = "/comment/like")
-    public String likeComment(HttpSession httpSession, String postId, String commentId, String isLiked) {
-        if(postId != null && commentId != null && isLiked != null) {
-            boolean state = Boolean.getBoolean(isLiked);
-            UserRecord currentUser = (UserRecord) httpSession.getAttribute("currentUser");
-            if(state) {
-                likeRepository.deleteByCommentIdAndUserIdAndPostId(
-                        currentUser.userId(), UUID.fromString(postId), Long.getLong(commentId)
-                );
-            } else {
+    public String likeComment(HttpSession httpSession, String postId, String commentId, String isLiked, String likeId) {
+        if(postId != null && isLiked != null && commentId != null && likeId != null) {
+            if(isLiked.equalsIgnoreCase("false")) {
+                UserRecord currentUser = (UserRecord) httpSession.getAttribute("currentUser");
                 repository.findById(currentUser.userId()).ifPresent(user -> {
                     postRepository.findById(UUID.fromString(postId)).ifPresent(post -> {
-                        commentRepository.findById(Long.getLong(commentId)).ifPresent(comment -> {
+                        commentRepository.findById(Long.parseLong(commentId)).ifPresent(comment -> {
                             Likes likes = new Likes();
                             likes.setPost(post);
                             likes.setUser(user);
@@ -177,20 +191,34 @@ public class HomeController {
                         });
                     });
                 });
+            } else {
+                if(Long.parseLong(likeId) != 0L) {
+                    likeRepository.deleteById(Long.parseLong(likeId));
+                }
             }
         }
         return "redirect:/";
     }
 
     @PostMapping(name = "Edit Comment", value = "/comment/edit")
-    public String editComment(Model model, @RequestBody String userId) {
-        System.out.println(userId);
+    public String editComment(EditRecord edit) {
+        if(edit != null && edit.text() != null && edit.commentId() != null) {
+            postRepository.findById(UUID.fromString(edit.commentId().split("PostId")[1])).ifPresent(post -> {
+                post.getComments().forEach(p -> {
+                    if(p.getCommentId().equals(Long.parseLong(edit.commentId().split("PostId")[0]))) {
+                        p.setComment(edit.text());
+                        p.setUpdatedAt(LocalDateTime.now());
+                        commentRepository.save(p);
+                    }
+                });
+            });
+        }
         return "redirect:/";
     }
 
     @PostMapping(name = "Delete Comment", value = "/comment/delete")
     public String deleteComment(String commentId) {
-        commentRepository.deleteById(Long.getLong(commentId));
+        commentRepository.deleteById(Long.parseLong(commentId));
         return "redirect:/";
     }
 }

@@ -29,4 +29,6 @@ public class User extends Moment{
     private String password;
     @OneToMany(mappedBy = "user", orphanRemoval = true, fetch = FetchType.EAGER)
     List<Post> posts = new ArrayList<>();
+    @OneToMany(orphanRemoval = true, mappedBy = "user", fetch = FetchType.EAGER)
+    private List<Likes> likes;
 }

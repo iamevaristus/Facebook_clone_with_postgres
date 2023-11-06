@@ -126,7 +126,6 @@
                                 <i class="fa-solid fa-thumbs-up" style="color: #0061ff;"></i>
                                 <p style="margin-left: 10px;" th:text="${post.likeString(currentUser)}"></p>
                             </div>
-                            <%-- Comments Section --%>
                             <p style="
                                 padding: 0 12px;
                                 font-size: 15px;
@@ -134,8 +133,9 @@
                         </div>
                         <hr>
                         <div class="like">
-                            <form th:action="@{/post/like}" method="post">
+                            <form th:action="@{/post/like}" method="post" th:object="${editContent}">
                                 <input th:value="${post.postId}" th:name="postId" type="hidden" />
+                                <input th:value="${post.currentUserPostLikeId(currentUser)}" th:name="likeId" type="hidden" />
                                 <input type="hidden" th:value="${post.isLikedByCurrentUser(currentUser)}" th:name="isLiked">
                                 <button type="submit" class="like_icon like-button" th:if="${post.isLikedByCurrentUser(currentUser)}">
                                     <i class="fa-solid fa-thumbs-up"></i>
@@ -154,23 +154,24 @@
                                 <i class="fa-solid fa-share"></i>
                                 <p>Share</p>
                             </div>
-                            <div th:if="${post.isPostedByCurrentUser(currentUser)}">
-                                <div class="like_icon edit-button open_edit_post" data-post-content="${post.post} *****PostID${post.postId}">
-                                    <i class="fa-solid fa-marker"></i>
-                                    <p>Edit Post</p>
-                                </div>
-                                <form th:action="@{/post/edit}" method="post">
-                                    <input type="hidden" th:value="${post.postId}">
-                                    <button type="submit" class="like_icon delete-button">
-                                        <i class="fa-solid fa-trash"></i>
-                                        Delete Post
-                                    </button>
-                                </form>
+                            <div class="like_icon edit-button open_edit_post"
+                                 th:if="${post.isPostedByCurrentUser(currentUser)}"
+                            >
+                                <input type="hidden" th:value="${post.editPost}" class="edit-post">
+                                <i class="fa-solid fa-marker"></i>
+                                <p>Edit Post</p>
                             </div>
+                            <form th:action="@{/post/delete}" method="post" th:if="${post.isPostedByCurrentUser(currentUser)}">
+                                <input type="hidden" th:value="${post.postId}" th:name="postId">
+                                <button type="submit" class="like_icon delete-button">
+                                    <i class="fa-solid fa-trash"></i>
+                                    Delete Post
+                                </button>
+                            </form>
                         </div>
                         <hr>
                         <div class="comment_wrapper">
-                            <div th:if="${!post.comments().isEmpty()}" th:each="comment : ${post.comments()}">
+                            <div th:if="${!post.comments.isEmpty()}" th:each="comment: ${post.comments}">
                                 <div class="comment-row" style="    margin: 14px 0; display: flex; align-items: start; justify-content: flex-start">
                                     <div style="
                                           background-color: #eeebeb;
@@ -182,26 +183,29 @@
                                           border-radius: 50%;
                                           margin-right: 20px;
                                     ">
-                                        <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${comment.commentedByAvatar()}"></h4>
+                                        <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${comment.commentedByAvatar}"></h4>
                                     </div>
                                     <div class="comment-column" style=" width: 100%">
                                         <div style="display: flex; align-items: center; justify-content: space-between;">
                                             <form th:action="@{/show/profile}" method="post">
-                                                <input type="hidden" th:value="${comment.userId()}">
-                                                <button class="friends_name" type="submit" style="background-color: transparent;
-                                                  box-shadow: none;
-                                                  font-size: 16px;
-                                                  border: none;" th:text="${comment.commentedBy()}"></button>
+                                                <input type="hidden" th:value="${comment.userId}" th:name="userId">
+                                                <button class="friends_name" type="submit" style="
+                                                    background-color: transparent;
+                                                    box-shadow: none;
+                                                    font-size: 16px;
+                                                    border: none;" th:text="${comment.commentedBy}"
+                                                ></button>
                                             </form>
-                                            <p style="font-size: 14px; text-align: center; margin: 0; color: #9a9a9a" th:text="${comment.likeString()}"></p>
+                                            <p style="font-size: 14px; text-align: center; margin: 0; color: #9a9a9a" th:text="${comment.likeString}"></p>
                                         </div>
                                         <div class="comment-buttons" style="display: flex; justify-content: space-between; width: 100%; align-items: center">
-                                            <p style="font-size: 16px; color: #555555" th:text="${comment.comment()}"></p>
+                                            <p style="font-size: 16px; color: #555555" th:text="${comment.comment}"></p>
                                             <div style="display: flex; align-items: center">
                                                 <form th:action="@{/comment/like}" method="post">
-                                                    <input th:value="*{comment.commentId()}" type="hidden" />
-                                                    <input th:value="*{comment.postId()}" type="hidden" />
-                                                    <input type="hidden" th:value="*{comment.isLikedByCurrentUser(currentUser)}">
+                                                    <input th:value="${comment.commentId}" th:name="commentId" type="hidden" />
+                                                    <input th:value="${comment.postId}" th:name="postId" type="hidden" />
+                                                    <input type="hidden" th:value="${comment.isLikedByCurrentUser(currentUser)}" th:name="isLiked">
+                                                    <input th:value="${comment.currentUserCommentLikeId(currentUser)}" th:name="likeId" type="hidden" />
                                                     <button type="submit" class="like_icon like-button" th:if="${comment.isLikedByCurrentUser(currentUser)}">
                                                         <i class="fa-solid fa-thumbs-up"></i>
                                                     </button>
@@ -209,26 +213,24 @@
                                                         <i class="fa-solid fa-thumbs-up"></i>
                                                     </button>
                                                 </form>
-                                                <div th:if="${comment.isCommentedByCurrentUser(currentUser)}">
-                                                    <div class="like_icon edit-button open_edit_comment" data-comment-content="${comment.comment} *****CommentID${comment.commentId}">
-                                                        <i class="fa-solid fa-marker"></i>
-                                                        <p>Edit Comment</p>
-                                                    </div>
-                                                    <form th:action="@{/comment/edit}" method="post">
-                                                        <input type="hidden" th:value="*{comment.postId()}">
-                                                        <input type="hidden" th:value="*{comment.commentId()}">
-                                                        <button type="submit" class="like_icon delete-button">
-                                                            <i class="fa-solid fa-trash"></i>
-                                                            Delete Comment
-                                                        </button>
-                                                    </form>
+                                                <div class="like_icon edit-button open_edit_comment"
+                                                     th:if="${comment.isCommentedByCurrentUser(currentUser)}">
+                                                    <input type="hidden" th:value="${comment.editComment}" class="edit-comment">
+                                                    <i class="fa-solid fa-marker"></i>
                                                 </div>
+                                                <form th:action="@{/comment/delete}"
+                                                      th:if="${comment.isCommentedByCurrentUser(currentUser)}"
+                                                      method="post">
+                                                    <input type="hidden" th:value="${comment.commentId()}" th:name="commentId">
+                                                    <button type="submit" class="like_icon delete-button">
+                                                        <i class="fa-solid fa-trash"></i></button>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <form th:action="@{/comment/create}" method="post" style="display: flex; flex: 1">
+                            <form th:action="@{/comment/create}" method="post" style="display: flex; flex: 1" th:object="${editContent}">
                                 <div style="
                                   background-color: #eeebeb;
                                   display: flex;
@@ -243,8 +245,8 @@
                                 </div>
                                 <div class="comment_search">
                                     <label>
-                                        <input type="hidden" th:value="${post.postId()}">
-                                        <input type="text" placeholder="Write a comment" th:field="${commentContent}">
+                                        <input type="hidden" th:name="postId" th:value="${post.postId}">
+                                        <input type="text" placeholder="Write a comment" th:field="*{text}">
                                     </label>
                                 </div>
                                 <button type="submit" class="comment_icon send-post">
@@ -295,11 +297,11 @@
                             <i class="fa-solid fa-ellipsis"></i>
                         </div>
                     </div>
-                    <div style="padding: 225px 50px" th:if="${viewProfile.posts().size() == 0 || viewProfile.posts().isEmpty()}">
+                    <div style="padding: 225px 50px" th:if="${viewProfilePosts.size() == 0 || viewProfilePosts.isEmpty()}">
                         <h2 style="font-size: 50px; text-align: center">🫣</h2>
                         <p style="text-align: center" th:text="${viewProfile.noPosts()}"></p>
                     </div>
-                    <div th:if="${!viewProfile.posts().isEmpty()}" th:each=" post : ${viewProfile.posts()} ">
+                    <div th:if="${!viewProfilePosts.isEmpty()}" th:each=" post: ${viewProfilePosts} ">
                         <div style="border: 6px solid lavender; border-radius: 15px; padding: 10px; margin-bottom: 10px">
                             <div style="display: flex; justify-content: space-between; align-items: center">
                                 <div style="display: flex; align-items: center">
@@ -317,13 +319,13 @@
                                     </div>
                                     <div class="friends_name">
                                         <form th:action="@{/show/profile}" method="post">
-                                            <input th:field="*{post.user().getUserId()}" type="hidden" />
+                                            <input th:value="${post.user.userId}" th:name="userId" type="hidden" />
                                             <button class="friends_name" type="submit" style="background-color: transparent;
                                               box-shadow: none;
                                               font-size: 16px;
-                                              border: none;" th:text="${post.postedBy()}"></button>
+                                              border: none;" th:text="${post.postedBy}"></button>
                                         </form>
-                                        <p class="time" th:text="${post.postTime()}"><i class="fa-solid fa-user-group"></i></p>
+                                        <p class="time" th:text="${post.postTime}"><i class="fa-solid fa-user-group"></i></p>
                                     </div>
                                 </div>
                                 <div class="menu">
@@ -345,6 +347,7 @@
                             <div class="like">
                                 <form th:action="@{/post/like}" method="post">
                                     <input th:value="${post.postId}" th:name="postId" type="hidden" />
+                                    <input th:value="${post.currentUserPostLikeId(currentUser)}" th:name="likeId" type="hidden" />
                                     <input type="hidden" th:value="${post.isLikedByCurrentUser(currentUser)}" th:name="isLiked">
                                     <button type="submit" class="dis_like_icon like-button" th:if="${post.isLikedByCurrentUser(currentUser)}">
                                         <i class="fa-solid fa-thumbs-up"></i></button>
@@ -353,18 +356,20 @@
                                 </form>
                                 <div class="dis_like_icon"><i class="fa-solid fa-message"></i></div>
                                 <div class="dis_like_icon"><i class="fa-solid fa-share"></i></div>
-                                <div th:if="${post.isPostedByCurrentUser(currentUser)}">
-                                    <div class="dis_like_icon edit-button open_edit_post" data-post-content="${post.post} *****PostID${post.postId}">
-                                        <i class="fa-solid fa-marker"></i></div>
-                                    <form th:action="@{/post/edit}" method="post">
-                                        <input type="hidden" th:value="*{post.postId()}">
-                                        <button type="submit" class="dis_like_icon delete-button"><i class="fa-solid fa-trash"></i></button>
-                                    </form>
-                                </div>
+                                <div class="dis_like_icon edit-button open_edit_post"
+                                     th:if="${post.isPostedByCurrentUser(currentUser)}">
+                                    <input type="hidden" th:value="${post.editPost}" class="edit-post">
+                                    <i class="fa-solid fa-marker"></i></div>
+                                <form th:action="@{/post/delete}"
+                                      th:if="${post.isPostedByCurrentUser(currentUser)}"
+                                      method="post">
+                                    <input type="hidden" th:value="${post.postId}" th:name="postId">
+                                    <button type="submit" class="dis_like_icon delete-button"><i class="fa-solid fa-trash"></i></button>
+                                </form>
                             </div>
                             <hr>
                             <div class="comment_wrapper">
-                                <div th:if="${!post.comments().isEmpty()}" th:each="comment : ${post.comments()}">
+                                <div th:if="${!post.comments.isEmpty()}" th:each="comment : ${post.comments}">
                                     <div class="comment-row" style="    margin: 14px 0; display: flex; align-items: start; justify-content: flex-start">
                                         <div style="
                                           background-color: #eeebeb;
@@ -376,26 +381,27 @@
                                           border-radius: 50%;
                                           margin-right: 20px;
                                         ">
-                                            <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${comment.commentedByAvatar()}"></h4>
+                                            <h4 style="font-size: 25px; text-align: center; margin: 0;" th:text="${comment.commentedByAvatar}"></h4>
                                         </div>
                                         <div class="comment-column" style=" width: 100%">
                                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                                 <form th:action="@{/show/profile}" method="post">
-                                                    <input type="hidden" th:value="${comment.userId()}">
+                                                    <input type="hidden" th:value="${comment.userId}">
                                                     <button class="friends_name" type="submit" style="background-color: transparent;
                                                       box-shadow: none;
                                                       font-size: 16px;
-                                                      border: none;" th:text="${comment.commentedBy()}"></button>
+                                                      border: none;" th:text="${comment.commentedBy}"></button>
                                                 </form>
                                                 <p style="font-size: 14px; text-align: center; margin: 0; color: #9a9a9a" th:text="${comment.likeString()}"></p>
                                             </div>
                                             <div class="comment-buttons" style="display: flex; justify-content: space-between; width: 100%; align-items: center">
-                                                <p style="font-size: 16px; color: #555555" th:text="${comment.comment()}"></p>
+                                                <p style="font-size: 16px; color: #555555" th:text="${comment.comment}"></p>
                                                 <div style="display: flex; align-items: center">
-                                                    <form th:action="@{/comment/like}" method="post" th:object="${editContent}">
-                                                        <input th:field="*{commentId}" th:value="*{comment.commentId}" type="hidden" />
-                                                        <input th:value="*{comment.postId()}" type="hidden" />
-                                                        <input type="hidden" th:value="*{comment.isLikedByCurrentUser(currentUser)}">
+                                                    <form th:action="@{/comment/like}" method="post">
+                                                        <input th:name="commentId" th:value="${comment.commentId}" type="hidden" />
+                                                        <input th:value="${comment.postId}" th:name="postId" type="hidden" />
+                                                        <input th:value="${comment.currentUserCommentLikeId(currentUser)}" th:name="likeId" type="hidden" />
+                                                        <input type="hidden" th:value="${comment.isLikedByCurrentUser(currentUser)}" th:name="isLiked">
                                                         <button type="submit" class="like_icon like-button" th:if="${comment.isLikedByCurrentUser(currentUser)}">
                                                             <i class="fa-solid fa-thumbs-up"></i>
                                                         </button>
@@ -403,20 +409,15 @@
                                                             <i class="fa-solid fa-thumbs-up"></i>
                                                         </button>
                                                     </form>
-                                                    <div th:if="${comment.isCommentedByCurrentUser(currentUser)}">
-                                                        <div class="like_icon edit-button open_edit_comment" data-comment-content="${comment.comment} *****CommentID${comment.commentId}">
-                                                            <i class="fa-solid fa-marker"></i>
-                                                            <p>Edit Comment</p>
-                                                        </div>
-                                                        <form th:action="@{/comment/delete}" method="post" th:object="${editContent}">
-                                                            <input type="hidden" th:field="*{commentId}">
-                                                            <input type="hidden" th:field="*{postId}">
-                                                            <button type="submit" class="like_icon delete-button">
-                                                                <i class="fa-solid fa-trash"></i>
-                                                                Delete Comment
-                                                            </button>
-                                                        </form>
-                                                    </div>
+                                                    <div class="like_icon edit-button open_edit_comment"
+                                                         th:if="${comment.isCommentedByCurrentUser(currentUser)}">
+                                                        <input type="hidden" th:value="${comment.editComment}" class="edit-comment">
+                                                        <i class="fa-solid fa-marker"></i></div>
+                                                    <form th:action="@{/comment/delete}" method="post"
+                                                          th:if="${comment.isCommentedByCurrentUser(currentUser)}">
+                                                        <input type="hidden" th:name="commentId" th:value="${comment.commentId}">
+                                                        <button type="submit" class="like_icon delete-button"><i class="fa-solid fa-trash"></i></button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -437,7 +438,7 @@
                                     </div>
                                     <div class="comment_search">
                                         <label>
-                                            <input type="hidden" th:field="*{postId}">
+                                            <input type="hidden" th:name="postId" th:value="${post.postId}">
                                             <input type="text" placeholder="Write a comment" th:field="*{text}">
                                         </label>
                                     </div>
@@ -503,6 +504,7 @@
                 </form>
             </div>
         </div>
+
         <div class="modal edit_comment">
             <div class="modal-content">
                 <h3 style="color: #134892;" th:text="${viewProfile.editComment()}"></h3>
@@ -515,7 +517,7 @@
                               placeholder="">
                           </textarea>
                     </label>
-                    <input type="hidden" th:field="*{commentId}" id="editCommentInputId">
+                    <input type="hidden" th:field="*{commentId}" class="editCommentInputId">
                     <div class="post-buttons">
                         <div class="post_icon cancel-post close_edit_comment">
                             <i class="fa-solid fa-xmark" style="margin-right: 8px;"></i>

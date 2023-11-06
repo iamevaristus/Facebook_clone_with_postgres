@@ -4,7 +4,6 @@ import com.fb.facebook_clone.models.Likes;
 import com.fb.facebook_clone.utils.Utils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +17,7 @@ public record PostRecord(
 
     public int numberOfLikes() {
         return likes.stream().filter(
-                like -> like.getPost().getPostId().equals(postId)
+                like -> like.getPost().getPostId().equals(postId) && like.getComment() == null
         ).toList().size();
     }
 
@@ -34,8 +33,19 @@ public record PostRecord(
 
     public boolean isLikedByCurrentUser(UserRecord currentUser) {
         return likes.stream().anyMatch(like ->
-                like.getPost().getPostId().equals(postId) && like.getUser().getUserId().equals(currentUser.userId())
+                like.getPost().getPostId().equals(postId)
+                        && like.getComment() == null
+                        && like.getUser().getUserId().equals(currentUser.userId())
         );
+    }
+
+    public Long currentUserPostLikeId(UserRecord currentUser) {
+        for(Likes like : likes) {
+            if(like.getUser().getUserId().equals(currentUser.userId()) && like.getPost().getPostId().equals(postId)) {
+                return like.getId();
+            }
+        }
+        return 0L;
     }
 
     public String postedBy() {
@@ -82,5 +92,9 @@ public record PostRecord(
         } else {
             return "%s commented this post".formatted(numberOfComments());
         }
+    }
+
+    public String editPost() {
+        return post + "***PostId***" + postId;
     }
 }

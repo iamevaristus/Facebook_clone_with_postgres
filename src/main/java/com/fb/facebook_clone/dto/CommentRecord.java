@@ -31,6 +31,22 @@ public record CommentRecord(Long commentId, String comment, UUID userId, UserRec
         return user.avatar();
     }
 
+    public Long currentUserCommentLikeId(UserRecord currentUser) {
+        for(Likes like : likes) {
+            if(like.getUser().getUserId().equals(currentUser.userId())
+                    && like.getPost().getPostId().equals(postId)
+                    && like.getComment().getCommentId().equals(commentId)
+            ) {
+                return like.getId();
+            }
+        }
+        return 0L;
+    }
+
+    public String editComment() {
+        return comment + "***COMMENTED***" + commentId + "PostId" + postId;
+    }
+
     public String likeString() {
         return numberOfLikes() + " likes";
     }

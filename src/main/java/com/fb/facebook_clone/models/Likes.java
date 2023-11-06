@@ -28,7 +28,7 @@ public class Likes {
             foreignKey = @ForeignKey(name = "like_post_id")
     )
     private Post post;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(
             name = "user_id",
             referencedColumnName = "user_id",

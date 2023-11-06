@@ -1,5 +1,6 @@
 package com.fb.facebook_clone.models;
 
+import com.fb.facebook_clone.utils.Utils;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -33,4 +34,18 @@ public class Post extends Moment{
     private List<Comment> comments;
     @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Likes> likes;
+
+    public boolean isUpdated() {
+        return getUpdatedAt() != null;
+    }
+
+    public String postTime() {
+        if(isUpdated()) {
+            return "Posted at: %s, Updated at: %s".formatted(
+                    Utils.formatDateTime(getCreatedAt().toString()), Utils.formatDateTime(getUpdatedAt().toString())
+            );
+        } else {
+            return Utils.formatDateTime(getCreatedAt().toString());
+        }
+    }
 }
